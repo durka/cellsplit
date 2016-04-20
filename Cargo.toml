@@ -1,0 +1,14 @@
+[package]
+name = "cellsplit"
+version = "0.1.0"
+authors = ["Alex Burka <aburka@seas.upenn.edu>"]
+
+[[bin]]
+name = "cellsplit"
+doc = false
+
+[dependencies]
+clap = { version = "=2.3.0", features = ["color", "unstable"] }
+error-type = "0.1"
+unborrow = "0.1"
+
