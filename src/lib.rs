@@ -77,7 +77,7 @@ pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
             unborrow!(cells.push(start_cell(&inpath, cells.last_mut().unwrap_or(&mut outfile), &outpat, outs, overwrite)?));
             outs += 1;
             writeln!(cells.last_mut().unwrap(), "{}", &line[1..])?;
-        } else if trimline.starts_with("end") {
+        } else if trimline == "end" {
             cells.pop().unwrap();
             writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line)?;
         } else if trimline.starts_with("for")
