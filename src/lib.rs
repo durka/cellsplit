@@ -108,3 +108,7 @@ pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
     Ok(())
 }
 
+pub fn collapse<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
+    Err("collapsing is not yet implemented".into())
+}
+
