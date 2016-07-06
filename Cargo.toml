@@ -3,6 +3,13 @@ name = "cellsplit"
 version = "0.1.0"
 authors = ["Alex Burka <aburka@seas.upenn.edu>"]
 
+description = "Utility for dissecting MATLAB Cell Mode scripts"
+homepage = "https://github.com/durka/cellsplit"
+repository = "https://github.com/durka/cellsplit"
+readme = "README.md"
+license = "MIT"
+keywords = ["matlab", "cell"]
+
 [[bin]]
 name = "cellsplit"
 doc = false
