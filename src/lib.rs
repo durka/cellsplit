@@ -1,5 +1,6 @@
 #[macro_use] extern crate error_type;
 #[macro_use] extern crate unborrow;
+extern crate slug;
 
 use std::borrow::Cow;
 use std::fs::{self, File, OpenOptions};
@@ -32,14 +33,29 @@ fn try_create<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<File> {
                 .map_err(Into::into)
 }
 
-fn start_cell<W: Write>(inpath: &Path, file: &mut W, pat: &str, n: i32, overwrite: bool) -> Result<File> {
-    let name = pat.replace("{}", &n.to_string());
+fn slugify(s: &str, limit: usize) -> String {
+    let slug = slug::slugify(s.trim()).replace('-', "_");
+    slug[..slug.char_indices().nth(limit).map_or(slug.len(), |(i,_)| i)].to_string()
+}
+
+fn start_cell<W: Write>(inpath: &Path, file: &mut W, pat: &str, n: i32, overwrite: bool, title: &str) -> Result<File> {
+    let name = pat.replace("{}", &format!("{}_{}", &n.to_string(), slugify(title.trim_left_matches('%'), 20)));
     let mut cell = try_create(&name, overwrite)?;
     writeln!(cell, "% part {} of {}", n, inpath.display())?;
     writeln!(file, "{}", Path::new(&name).file_stem().unwrap().to_str().unwrap())?;
     Ok(cell)
 }
 
+fn write_cell(cells: &mut Vec<File>, outfile: &mut File, inpath: &Path, outpat: &str, outs: i32, overwrite: bool,
+              indent: &str, line: &str) -> Result<()> {
+    let trimline = line.trim_left();
+    writeln!(cells.last_mut().unwrap_or(outfile), "{}", line)?;
+    write!(cells.last_mut().unwrap_or(outfile), "{}{}", &line[..(line.len() - trimline.len())], indent)?;
+    unborrow!(cells.push(start_cell(inpath, cells.last_mut().unwrap_or(outfile), outpat, outs, overwrite, trimline)?));
+    Ok(())
+}
+
+// TODO name files with slugified section headers
 pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
     let inpath = fs::canonicalize(path.as_ref())?;
     let outpat = {
@@ -60,7 +76,7 @@ pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
              inpath.display(), outpat.replace("{}", "gen"), outpat.replace("{}", "*"));
 
     let mut outs = 1;
-    let mut cells = vec![start_cell(&inpath, &mut outfile, &outpat, 0, overwrite)?];
+    let mut cells = vec![start_cell(&inpath, &mut outfile, &outpat, 0, overwrite, "")?];
     for line in infile.lines() {
         let line = line?;
         let trimline = line.trim_left();
@@ -70,9 +86,7 @@ pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
             println!("Found cell break: {}", trimline);
 
             cells.pop().unwrap();
-            writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line)?;
-            write!(cells.last_mut().unwrap_or(&mut outfile), "{}", &line[..(line.len() - trimline.len())])?;
-            unborrow!(cells.push(start_cell(&inpath, cells.last_mut().unwrap_or(&mut outfile), &outpat, outs, overwrite)?));
+            write_cell(&mut cells, &mut outfile, &inpath, &outpat, outs, overwrite, "", &line)?;
             outs += 1;
             writeln!(cells.last_mut().unwrap(), "{}", &line[1..])?;
         } else if trimline == "end" {
@@ -83,17 +97,13 @@ pub fn expand<P: AsRef<Path>>(path: P, overwrite: bool) -> Result<()> {
                || trimline.starts_with("parfor")
                || trimline.starts_with("if")
                || trimline.starts_with("try") {
-            writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line)?;
-            write!(cells.last_mut().unwrap_or(&mut outfile), "{}    ", &line[..(line.len() - trimline.len())])?;
-            unborrow!(cells.push(start_cell(&inpath, cells.last_mut().unwrap_or(&mut outfile), &outpat, outs, overwrite)?));
+            write_cell(&mut cells, &mut outfile, &inpath, &outpat, outs, overwrite, "    ", &line)?;
             outs += 1;
         } else if trimline.starts_with("else")
                || trimline.starts_with("elseif")
                || trimline.starts_with("catch") {
             cells.pop().unwrap();
-            writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line)?;
-            write!(cells.last_mut().unwrap_or(&mut outfile), "{}    ", &line[..(line.len() - trimline.len())])?;
-            unborrow!(cells.push(start_cell(&inpath, cells.last_mut().unwrap_or(&mut outfile), &outpat, outs, overwrite)?));
+            write_cell(&mut cells, &mut outfile, &inpath, &outpat, outs, overwrite, "    ", &line)?;
             outs += 1;
         } else if trimline.starts_with("switch") {
             return Err("switch is unimplemented".into());

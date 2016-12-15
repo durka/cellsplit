@@ -15,7 +15,8 @@ name = "cellsplit"
 doc = false
 
 [dependencies]
-clap = { version = "2.3.0", features = ["color", "unstable"] }
-error-type = "0.1"
-unborrow = "0.3"
+clap       = { version = "2.3.0", features = ["color", "unstable"] }
+error-type             = "0.1"
+unborrow               = "0.3"
+slug                   = "0.1"
 
