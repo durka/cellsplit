@@ -6,14 +6,20 @@ extern crate cellsplit;
 
 fn main() {
     let matches = clap_app!(cellsplit =>
-        (version: env!("CARGO_PKG_VERSION"))
-        (author: env!("CARGO_PKG_AUTHORS"))
-        (about: env!("CARGO_PKG_DESCRIPTION"))
+        (version: crate_version!())
+        (author:  crate_authors!())
+        (about:   crate_description!())
+        (@setting ColoredHelp)
+        (@setting SubcommandRequiredElseHelp)
         (@subcommand expand =>
+            (about: "Split a cell mode file into individually executable scripts")
+            (@setting ColoredHelp)
             (@arg INPUT: +required "The cell mode file")
             (@arg overwrite: -o --overwrite "Overwrite output files")
         )
         (@subcommand collapse =>
+            (about: "Recombine individual scripts into a complete cell mode file")
+            (@setting ColoredHelp)
             (@arg OUTPUT: +required "The generated cell mode file")
             (@arg overwrite: -o --overwrite "Overwrite output file")
         )
@@ -24,16 +30,20 @@ fn main() {
         if let Err(err) = cellsplit::expand(infile, matches.is_present("overwrite")) {
             println!("ERROR: {}", err);
             process::exit(1);
+        } else {
+            println!("Complete.");
         }
     } else if let Some(matches) = matches.subcommand_matches("collapse") {
         let outfile = matches.value_of("OUTPUT").unwrap();
         if let Err(err) = cellsplit::collapse(outfile, matches.is_present("overwrite")) {
             println!("ERROR: {}", err);
             process::exit(1);
+        } else {
+            println!("Complete.");
         }
     } else {
-        println!("No subcommand");
-        process::exit(1);
+        // unreachable because of the SubcommandRequiredElseHelp setting
+        unreachable!();
     }
 }
 
