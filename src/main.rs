@@ -1,6 +1,9 @@
 #[macro_use] extern crate clap;
+#[macro_use] extern crate error_chain;
 
 use std::process;
+
+use error_chain::ChainedError;
 
 extern crate cellsplit;
 
@@ -28,7 +31,7 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("expand") {
         let infile = matches.value_of("INPUT").unwrap();
         if let Err(err) = cellsplit::expand(infile, matches.is_present("overwrite")) {
-            println!("ERROR: {}", err);
+            println!("{}", ChainedError::display(&err));
             process::exit(1);
         } else {
             println!("Complete.");
@@ -36,7 +39,7 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("collapse") {
         let outfile = matches.value_of("OUTPUT").unwrap();
         if let Err(err) = cellsplit::collapse(outfile, matches.is_present("overwrite")) {
-            println!("ERROR: {}", err);
+            println!("{}", ChainedError::display(&err));
             process::exit(1);
         } else {
             println!("Complete.");

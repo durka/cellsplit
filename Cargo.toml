@@ -19,4 +19,6 @@ clap       = { version = "2.3.0", features = ["color"] }
 error-chain            = "0.8"
 unborrow               = "0.3"
 slug                   = "0.1"
+regex                  = "0.2"
+lazy_static            = "0.2"
 
