@@ -6,6 +6,7 @@ use std::process;
 use error_chain::ChainedError;
 
 extern crate cellsplit;
+use cellsplit::actor::Actor;
 
 fn main() {
     let matches = clap_app!(cellsplit =>
@@ -28,9 +29,11 @@ fn main() {
         )
     ).get_matches();
 
+    let actor = Actor::new();
+
     if let Some(matches) = matches.subcommand_matches("expand") {
         let infile = matches.value_of("INPUT").unwrap();
-        if let Err(err) = cellsplit::expand(infile, matches.is_present("overwrite")) {
+        if let Err(err) = cellsplit::expand(actor, infile, matches.is_present("overwrite")) {
             println!("{}", ChainedError::display(&err));
             process::exit(1);
         } else {
@@ -38,7 +41,7 @@ fn main() {
         }
     } else if let Some(matches) = matches.subcommand_matches("collapse") {
         let outfile = matches.value_of("OUTPUT").unwrap();
-        if let Err(err) = cellsplit::collapse(outfile, matches.is_present("overwrite")) {
+        if let Err(err) = cellsplit::collapse(actor, outfile, matches.is_present("overwrite")) {
             println!("{}", ChainedError::display(&err));
             process::exit(1);
         } else {

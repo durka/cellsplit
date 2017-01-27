@@ -6,6 +6,7 @@ extern crate slug;
 
 use std::path::PathBuf;
 
+pub mod actor;
 mod expand;
 mod collapse;
 
