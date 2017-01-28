@@ -1,5 +1,5 @@
-[![Crates.io](https://img.shields.io/crates/v/cellsplit.svg)]()
-[![Travis](https://img.shields.io/travis/durka/cellsplit.svg)]()
+[![Crates.io](https://img.shields.io/crates/v/cellsplit.svg)](https://crates.io/crates/cellsplit)
+[![Travis](https://img.shields.io/travis/durka/cellsplit.svg)](https://travis-ci.org/durka/cellsplit)
 
 What?
 =====
