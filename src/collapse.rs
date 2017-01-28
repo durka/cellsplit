@@ -1,5 +1,5 @@
 use std::io::{BufRead, BufReader, Write};
-use std::fs::{self, File};
+use std::fs;
 use std::path::Path;
 
 use regex::Regex;
@@ -12,7 +12,7 @@ fn collapse_into<W: Write>(actor: &Actor, from: &Path, to: &mut W) -> Result<()>
         static ref RE: Regex = Regex::new(r"^\s*([^\s]+) %cellsplit<\d+>$").unwrap();
     }
 
-    for line in BufReader::new(actor.perform(|| File::open(from), "open", from)?).lines().skip(1) {
+    for line in BufReader::new(actor.open(from)?).lines().skip(1) {
         let line = actor.perform(|| line, "read line from", from)?;
         if let Some(caps) = RE.captures(&line) {
             if let Some(scriptname) = caps.get(1) {
@@ -20,7 +20,7 @@ fn collapse_into<W: Write>(actor: &Actor, from: &Path, to: &mut W) -> Result<()>
                 collapse_into(actor, &scriptpath, to)?;
             }
         } else {
-            actor.perform(|| writeln!(to, "{}", line), "write line to", "script file")?;
+            actor.writeln(to, &line, "script file")?;
         }
     }
 
@@ -32,6 +32,6 @@ pub fn collapse<P: AsRef<Path>>(actor: Actor, path: P) -> Result<()> {
     let outpath = actor.perform(|| fs::canonicalize(path.as_ref()), "canonicalize", path.as_ref())?;
     let genpath = outpath.with_file_name(format!("{}_gen.m", outpath.file_stem().ok_or("no filename")?.to_str().ok_or("non-Unicode filename")?));
 
-    collapse_into(&actor, &genpath, &mut actor.perform(|| File::create(&outpath), "open", &outpath)?)
+    collapse_into(&actor, &genpath, &mut actor.create(&outpath)?)
 }
 

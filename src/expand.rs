@@ -8,12 +8,11 @@ use super::Result;
 use actor::Actor;
 
 fn try_create<P: AsRef<Path>>(actor: &Actor, path: P, overwrite: bool) -> Result<File> {
-    actor.perform(|| OpenOptions::new()
-                        .write(true)
-                        .create(true).truncate(true)
-                        .create_new(!overwrite)
-                        .open(path.as_ref()),
-                  "create", path.as_ref())
+    actor.open_options(OpenOptions::new()
+                   .write(true)
+                   .create(true).truncate(true)
+                   .create_new(!overwrite),
+               path.as_ref())
 }
 
 fn slugify(s: &str, limit: usize) -> String {
@@ -24,16 +23,16 @@ fn slugify(s: &str, limit: usize) -> String {
 fn start_cell<W: Write>(actor: &Actor, inpath: &Path, file: &mut W, pat: &str, n: i32, overwrite: bool, title: &str) -> Result<File> {
     let name = pat.replace("{}", &format!("{}_{}", slugify(title.trim_left_matches('%'), 20), n));
     let mut cell = try_create(actor, &name, overwrite)?;
-    actor.perform(|| writeln!(cell, "% part {} of {}", n, inpath.display()), "write to", &name)?;
-    actor.perform(|| writeln!(file, "{} %cellsplit<{}>", Path::new(&name).file_stem().unwrap().to_str().unwrap(), n), "write to", "script file")?;
+    actor.writeln(&mut cell, &format!("% part {} of {}", n, inpath.display()), &name)?;
+    actor.writeln(file, &format!("{} %cellsplit<{}>", Path::new(&name).file_stem().unwrap().to_str().unwrap(), n), "script file")?;
     Ok(cell)
 }
 
 fn write_cell(actor: &Actor, cells: &mut Vec<File>, outfile: &mut File, inpath: &Path, outpat: &str, outs: i32, overwrite: bool,
               indent: &str, line: &str) -> Result<()> {
     let trimline = line.trim_left();
-    actor.perform(|| writeln!(cells.last_mut().unwrap_or(outfile), "{}", line), "write to", "script file")?;
-    actor.perform(|| write!(cells.last_mut().unwrap_or(outfile), "{}{}", &line[..(line.len() - trimline.len())], indent), "write to", "script file")?;
+    actor.writeln(cells.last_mut().unwrap_or(outfile), line, "script file")?;
+    actor.write(cells.last_mut().unwrap_or(outfile), &format!("{}{}", &line[..(line.len() - trimline.len())], indent), "script file")?;
     unborrow!(cells.push(start_cell(actor, inpath, cells.last_mut().unwrap_or(outfile), outpat, outs, overwrite, trimline)?));
     Ok(())
 }
@@ -43,7 +42,7 @@ fn delete_from(actor: &Actor, file: &Path) -> Result<()> {
         static ref RE: Regex = Regex::new(r"^\s*([^\s]+) %cellsplit<\d+>$").unwrap();
     }
 
-    for line in BufReader::new(actor.perform(|| File::open(file), "open", file)?).lines() {
+    for line in BufReader::new(actor.open(file)?).lines() {
         let line = actor.perform(|| line, "read line from", file)?;
         if let Some(caps) = RE.captures(&line) {
             if let Some(scriptname) = caps.get(1) {
@@ -81,7 +80,7 @@ pub fn expand<P: AsRef<Path>>(actor: Actor, path: P, overwrite: bool) -> Result<
         delete_from(&actor, Path::new(&genname))?;
     }
 
-    let infile = BufReader::new(actor.perform(|| File::open(&inpath), "open", &inpath)?);
+    let infile = BufReader::new(actor.open(&inpath)?);
     let mut outfile = try_create(&actor, genname, overwrite)?;
 
     let mut outs = 1;
@@ -99,7 +98,7 @@ pub fn expand<P: AsRef<Path>>(actor: Actor, path: P, overwrite: bool) -> Result<
             outs += 1;
         } else if trimline == "end" {
             cells.pop().unwrap();
-            actor.perform(|| writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line), "write to", "script file")?;
+            actor.writeln(cells.last_mut().unwrap_or(&mut outfile), &line, "script file")?;
         } else if trimline.starts_with("for")
                || trimline.starts_with("while")
                || trimline.starts_with("parfor")
@@ -117,7 +116,7 @@ pub fn expand<P: AsRef<Path>>(actor: Actor, path: P, overwrite: bool) -> Result<
             Err("switch is unimplemented")?
         } else {
             // FIXME trim left if inside block inside cell
-            actor.perform(|| writeln!(cells.last_mut().unwrap(), "{}", line), "write to", "script file")?;
+            actor.writeln(cells.last_mut().unwrap(), &line, "script file")?;
         }
     }
 
