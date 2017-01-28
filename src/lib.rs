@@ -22,3 +22,5 @@ error_chain! {
     }
 }
 
+#[cfg(test)] mod tests;
+
