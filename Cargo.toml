@@ -1,6 +1,6 @@
 [package]
 name = "cellsplit"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Alex Burka <aburka@seas.upenn.edu>"]
 
 description = "Utility for dissecting MATLAB Cell Mode scripts"
@@ -15,7 +15,7 @@ name = "cellsplit"
 doc = false
 
 [dependencies]
-clap       = { version = "2.3.0", features = ["color"] }
+clap       = { version = "2.20.0", features = ["color"] }
 error-chain            = "0.8"
 unborrow               = "0.3"
 slug                   = "0.1"
