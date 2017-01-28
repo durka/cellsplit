@@ -2,6 +2,7 @@ use std::env;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use super::actor::Actor;
 use super::{Result, expand, collapse};
@@ -13,6 +14,7 @@ lazy_static! {
         env::set_current_dir(&path).unwrap();
         path
     };
+    static ref GIL: Mutex<()> = Mutex::new(());
 }
 
 macro_rules! test {
@@ -20,6 +22,7 @@ macro_rules! test {
         #[test]
         fn $name() {
             let _ = &*CURRENT_DIR;
+            let _g = GIL.lock().unwrap();
             clear();
             $body
             clear();
