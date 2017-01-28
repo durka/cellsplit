@@ -18,6 +18,6 @@ Status
 
 Unsupported features of MATLAB:
 
-    - `switch`
-    - (please file a bug if there is one I've overlooked)
+- `switch`
+- (please file a bug if there is one I've overlooked)
 
