@@ -1,7 +1,7 @@
 What?
 =====
 
-This program can split apart, and recombine (TODO), MATLAB scripts written using the Cell Mode feature.
+This program can split apart, and recombine, MATLAB scripts written using the Cell Mode feature.
 
 Why?
 ====
@@ -20,11 +20,4 @@ Unsupported features of MATLAB:
 
     - `switch`
     - ...
-
-Planned tasks for `cellsplit`:
-
-    - Recombine a set of scripts into a Cell Mode script
-    - Use the cell title comments to make better filenames
-    - Print a TOC somehow
-    - Tests and documentation
 
