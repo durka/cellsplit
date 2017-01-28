@@ -25,7 +25,6 @@ fn main() {
             (about: "Recombine individual scripts into a complete cell mode file")
             (@setting ColoredHelp)
             (@arg OUTPUT: +required "The generated cell mode file")
-            (@arg overwrite: -o --overwrite "Overwrite output file")
         )
     ).get_matches();
 
@@ -41,7 +40,7 @@ fn main() {
         }
     } else if let Some(matches) = matches.subcommand_matches("collapse") {
         let outfile = matches.value_of("OUTPUT").unwrap();
-        if let Err(err) = cellsplit::collapse(actor, outfile, matches.is_present("overwrite")) {
+        if let Err(err) = cellsplit::collapse(actor, outfile) {
             println!("{}", ChainedError::display(&err));
             process::exit(1);
         } else {

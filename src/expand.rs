@@ -97,7 +97,6 @@ pub fn expand<P: AsRef<Path>>(actor: Actor, path: P, overwrite: bool) -> Result<
             cells.pop().unwrap();
             write_cell(&actor, &mut cells, &mut outfile, &inpath, &outpat, outs, overwrite, "", &line)?;
             outs += 1;
-            actor.perform(|| writeln!(cells.last_mut().unwrap(), "{}", &line[1..]), "write to", "script file")?;
         } else if trimline == "end" {
             cells.pop().unwrap();
             actor.perform(|| writeln!(cells.last_mut().unwrap_or(&mut outfile), "{}", line), "write to", "script file")?;
